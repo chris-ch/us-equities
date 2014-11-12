@@ -9,6 +9,7 @@ import calendar
 from backtest.universe import Universe
 from backtest.screening import Screening
 from backtest.pricing import Pricing
+from backtest import constants
 
 def month_range(start_yyyymm, count=10, step=3):
     yyyymm = start_yyyymm
@@ -149,7 +150,7 @@ class Backtest(object):
         return price_end / price_start - 1.0
 
 def main():
-    with open('us-equities.csv', 'r') as equities_file:
+    with open(constants.SOURCE_US_EQUITIES, 'r') as equities_file:
         equities = [row.split(',')[0] for row in map(str.strip, equities_file.readlines())[1:]]
         
     universe = Universe(equities)

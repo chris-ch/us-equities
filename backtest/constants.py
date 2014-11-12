@@ -1,2 +1,6 @@
 PRICES_DATA = 'datasources/us-prices-adjusted-1992-2014.zip'
 UNADJUSTED_PRICES_DATA = 'datasources/us-prices-unadjusted-1992-2014.zip'
+SOURCE_US_EQUITIES = 'datasources/us-equities.csv'
+SOURCE_US_FUNDS = 'datasources/us-funds.csv'
+SOURCE_DIVIDENDS = 'datasources/dividends.csv'
+SOURCE_BENCHMARK = 'datasources/sptr.csv'

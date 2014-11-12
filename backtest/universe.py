@@ -3,6 +3,8 @@ from collections import defaultdict
 from datetime import datetime
 from datetime import timedelta
 
+import constants
+
 class Universe(object):
     
     def __init__(self, securities):
@@ -10,7 +12,7 @@ class Universe(object):
         logging.info('preinitialized a universe of %d securities' % len(securities))
         
         self.__liquidity_data = defaultdict(lambda : defaultdict(int))
-        with open('stats-volume.csv', 'r') as liquidity_file:
+        with open('stats-volume.db', 'r') as liquidity_file:
                 liquidity_data_lines = [row.split(',') for row in map(str.strip, liquidity_file.readlines()) if len(row) != 0]
                 for quarter_start, quarter_end, code, volume in liquidity_data_lines:
                     if volume > 0:
@@ -58,8 +60,8 @@ class SecurityNotFoundError:
 class UniverseOld(object):
     
     def load_prices(self, yyyymm_start, yyyymm_end):
-        SECURITIES_DATA = 'us-equities.csv'
-        PRICES_DATA = 'us-prices-equities-1992-2014.zip'
+        SECURITIES_DATA = constants.SOURCE_US_EQUITIES
+        PRICES_DATA = None
         self.__db = sqlite3.connect(':memory:')
         self.__db.execute("""CREATE TABLE IF NOT EXISTS security
             (

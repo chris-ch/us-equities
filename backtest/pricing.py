@@ -1,5 +1,6 @@
 from zipfile import ZipFile
 from datetime import datetime
+import constants
 
 def find_latest_before(as_of_date, prices):
     dates = prices.keys()
@@ -9,14 +10,14 @@ def find_latest_before(as_of_date, prices):
 class Pricing(object):
     
     def __init__(self):
-        self.__prices_zip = ZipFile('us-prices-unadjusted-1992-2014.zip', 'r')
-        with open('sptr.csv', 'r') as benchmark_file:
+        self.__prices_zip = ZipFile(constants.UNADJUSTED_PRICES_DATA, 'r')
+        with open(constants.SOURCE_BENCHMARK, 'r') as benchmark_file:
             self.__benchmark = dict()
             for row in benchmark_file.readlines():
                 yyyymmdd, value = row.strip().split(',') 
                 self.__benchmark[datetime.strptime(yyyymmdd, '%Y-%m-%d')] = float(value)
                             
-        with open('dividends.csv', 'r') as dividends_file:
+        with open(constants.SOURCE_DIVIDENDS, 'r') as dividends_file:
             self.__dividends = dict()
             for row in dividends_file.readlines():
                 code, yyyymmdd, value = row.strip().split(',') 
@@ -49,3 +50,4 @@ class Pricing(object):
             
         prices = self.__prices [code]
         return find_latest_before(as_of_date, prices)
+        
