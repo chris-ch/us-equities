@@ -37,12 +37,13 @@ def make_volatilities_statistics(universe, performances, count_months, start_yyy
 
 class SimpleCache(object):
     
-    def __init__(self, builder_func, key_builder=str):
+    def __init__(self, cache_name, builder_func, key_builder=str):
         self.__kb = key_builder
         self.__builder = builder_func
+        self.__cache_name = cache_name
         
     def get(self, *params):
-        cache = shelve.open('tmp-cache-screening.db', protocol=2)
+        cache = shelve.open(self.__cache_name, protocol=2)
         if cache.has_key(self.__kb(*params)):
             instance = cache[self.__kb(*params)]
             
@@ -53,7 +54,7 @@ class SimpleCache(object):
         cache.close()
         
         return instance
-            
+        
 class Screening(object):
     
     def __init__(self, universe):
@@ -72,7 +73,7 @@ class Screening(object):
         def stats_builder(universe=self.__universe, perfs=self.__performances, cm=count_months, sm=start_yyyymm, em=end_yyyymm):
             return make_volatilities_statistics(universe, perfs, cm, sm, em)
         
-        cache = SimpleCache(stats_builder, key_builder=lambda a, b: str((a, b)))
+        cache = SimpleCache('tmp-cache-screening.db', stats_builder, key_builder=lambda a, b: str((a, b)))
         volatilities = cache.get(yyyymm, count_months)
         
         logging.info('computed volatility for %d securities' % len(volatilities.keys()))
