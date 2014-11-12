@@ -5,6 +5,8 @@ from zipfile import ZipFile
 from collections import defaultdict
 from operator import itemgetter
 
+from backtest import constants
+
 def median(values):
     sorts = sorted(values)
     length = len(sorts)
@@ -30,8 +32,8 @@ def main():
         '11': ('10', '12'),
         '12': ('10', '12'),
     }
-    prices_source = 'us-prices-unadjusted-1992-2014.zip'
-    with ZipFile(prices_source, 'r') as prices_zip, open('stats-volume.csv', 'w') as stats_file:
+    prices_source = constants.UNADJUSTED_PRICES_DATA
+    with ZipFile(prices_source, 'r') as prices_zip, open('stats-volume.db', 'w') as stats_file:
         data_files = prices_zip.namelist()
         for index, dataset_name in enumerate(data_files):
             batch_count = index / 100 + 1
