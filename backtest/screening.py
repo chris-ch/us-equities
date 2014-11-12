@@ -58,7 +58,7 @@ class SimpleCache(object):
 class Screening(object):
     
     def __init__(self, universe):
-        self.__performances = shelve.open('perf-data.db', 'r')
+        self.__performances = shelve.open(constants.CACHE_PERFS, 'r')
         self.__universe = universe
         
     def compute_volatilities(self, yyyymm, count_months, count_securities):
@@ -73,7 +73,7 @@ class Screening(object):
         def stats_builder(universe=self.__universe, perfs=self.__performances, cm=count_months, sm=start_yyyymm, em=end_yyyymm):
             return make_volatilities_statistics(universe, perfs, cm, sm, em)
         
-        cache = SimpleCache('tmp-cache-screening.db', stats_builder, key_builder=lambda a, b: str((a, b)))
+        cache = SimpleCache(constants.CACHE_SCREENING, stats_builder, key_builder=lambda a, b: str((a, b)))
         volatilities = cache.get(yyyymm, count_months)
         
         logging.info('computed volatility for %d securities' % len(volatilities.keys()))

@@ -33,7 +33,7 @@ def main():
         '12': ('10', '12'),
     }
     prices_source = constants.UNADJUSTED_PRICES_DATA
-    with ZipFile(prices_source, 'r') as prices_zip, open('stats-volume.db', 'w') as stats_file:
+    with ZipFile(prices_source, 'r') as prices_zip, open(constants.CACHE_VOLUMES, 'w') as stats_file:
         data_files = prices_zip.namelist()
         for index, dataset_name in enumerate(data_files):
             batch_count = index / 100 + 1

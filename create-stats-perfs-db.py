@@ -10,7 +10,7 @@ from backtest import constants
 
 def main():
         PRICES_DATA = constants.PRICES_DATA
-        performances = shelve.open('perf-data.db', protocol=2)
+        performances = shelve.open(constants.CACHE_PERFS, protocol=2)
        
         with ZipFile(PRICES_DATA, 'r') as prices_data:
             securities = prices_data.namelist()
