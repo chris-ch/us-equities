@@ -20,20 +20,20 @@ def month_subtract(yyyymm, n):
     return start_yyyymm
 
 def make_volatilities_statistics(universe, performances, count_months, start_yyyymm, end_yyyymm):
-            volatilities = dict()
-            total = universe.size()
-            for index, security_code in enumerate(universe.securities()):
-                security_performances = [performances[security_code][date]
-                    for date in performances[security_code].keys()
-                        if date[:6] <= end_yyyymm
-                        and date[:6] >= start_yyyymm
-                ]
-                if len(security_performances) <= 0.8 * (count_months * 20): continue # not enough data
-                volatility = stdev(security_performances)
-                #logging.debug('volatility for security %s (%d/%d) = %.2f%%' % (security_code, index + 1, total, volatility * 100.0))
-                volatilities[security_code] = volatility
+    volatilities = dict()
+    total = universe.size()
+    for index, security_code in enumerate(universe.securities()):
+        security_performances = [performances[security_code][date]
+            for date in performances[security_code].keys()
+            if date[:6] <= end_yyyymm
+            and date[:6] >= start_yyyymm
+        ]
+        if len(security_performances) <= 0.8 * (count_months * 20): continue # not enough data
+        volatility = stdev(security_performances)
+        #logging.debug('volatility for security %s (%d/%d) = %.2f%%' % (security_code, index + 1, total, volatility * 100.0))
+        volatilities[security_code] = volatility
                 
-            return volatilities
+    return volatilities
 
 class SimpleCache(object):
     
