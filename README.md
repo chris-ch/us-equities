@@ -1,4 +1,4 @@
 us-equities
 ===========
 
-20 years of US equities prices &amp; perfs
+Tools for handling 20 years of US equities prices &amp; perfs
