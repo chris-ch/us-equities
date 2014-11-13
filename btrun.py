@@ -54,7 +54,6 @@ def apply_strategy(pricer, percents, amount, as_of_date):
     
 def create_portfolio(pricer, amount, securities, as_of_date):
     logging.info('creating portfolio as of %s' % as_of_date.strftime('%Y-%m-%d'))
-    logging.info('positions: %s' % (securities))
     weightings = dict()
     for security in securities:
         # assumes equal weighting
@@ -95,15 +94,31 @@ class Backtest(object):
                 amounts[code] /= total
         
         return amounts
-        
-    def turnover(self, date, portfolio, prev_portfolio):
-        prev_amounts = self.turn_shares_into_amounts(prev_portfolio, date)
-        amounts = self.turn_shares_into_amounts(portfolio, date)
+    
+    def delta_additions(self, portfolio, prev_portfolio):
         codes = set(portfolio.keys())
         prev_codes = set(prev_portfolio.keys())
         added_codes = codes - prev_codes
+        additions = [(code, portfolio[code]) for code in added_codes]
+        return additions
+    
+    def delta_deletions(self, portfolio, prev_portfolio):
+        codes = set(portfolio.keys())
+        prev_codes = set(prev_portfolio.keys())
         dropped_codes = prev_codes - codes
+        deletions = [(code, prev_portfolio[code]) for code in dropped_codes]
+        return deletions
+    
+    def delta_adjustments(self, portfolio, prev_portfolio):
+        codes = set(portfolio.keys())
+        prev_codes = set(prev_portfolio.keys())
         adjusted_codes = codes & prev_codes
+        adjustments = [(code, portfolio[code] - prev_portfolio[code]) for code in adjusted_codes]
+        return adjustments
+    
+    def turnover(self, date, portfolio, prev_portfolio):
+        prev_amounts = self.turn_shares_into_amounts(prev_portfolio, date)
+        amounts = self.turn_shares_into_amounts(portfolio, date)
         dropped_amount = 0.0
         for code in dropped_codes:
             logging.debug('liquidation of %s: %.0f' % (code, prev_amounts[code]))
@@ -156,7 +171,9 @@ def main():
         
         logging.info('investing %.0f as of %s' % (amount_invested, date_start.strftime('%Y-%m-%d')))
         portfolio, residual_cash = create_portfolio(pricer, amount_invested, buy_list, date_start)
-        print bt.turnover(date_start, portfolio, prev_portfolio)
+        logging.debug('additions %s' % bt.delta_additions(portfolio, prev_portfolio))
+        logging.debug('deletions %s' % bt.delta_deletions(portfolio, prev_portfolio))
+        logging.debug('adjustments %s' % bt.delta_adjustments(portfolio, prev_portfolio))
         # records positions
         portfolios[date_start] = (portfolio, residual_cash)
             
@@ -166,12 +183,10 @@ def main():
         logging.info('valuation as of %s: %.0f' % (date_end.strftime('%Y-%m-%d'), amount_final))
         logging.debug('positions at start of period: %s' % (bt.turn_shares_into_amounts(portfolio, date_start)))
         logging.debug('positions at end of period: %s' % (bt.turn_shares_into_amounts(portfolio, date_end)))
-        logging.info('performance: %.2f%%' % ((amount_final / amount_invested - 1.0) * 100.0))
+        logging.info('performance / benchmark: %.2f%% / %.2f%%' % ((amount_final / amount_invested - 1.0) * 100.0, bt.get_benchmark_performance(date_start, date_end)  * 100.0))
         amount_invested = amount_final
         prev_portfolio = portfolio
-        
-        logging.info('benchmark performance over same period: %.2f%%' % (bt.get_benchmark_performance(date_start, date_end)  * 100.0))
-    
+            
     logging.info('finished backtesting')
     
 if __name__ == '__main__':
@@ -179,7 +194,7 @@ if __name__ == '__main__':
     logging.basicConfig(
         level=logging.DEBUG,
         format='%(levelname)s %(asctime)s %(module)s - %(message)s',
-        filename=sys.argv[0].split('.')[0]  + '.log'
+        filename=sys.argv[0].split('.')[0]  + '.log', filemode='w'
     )
     logging.getLogger('btrun').setLevel(logging.DEBUG)
     logging.getLogger('screening').setLevel(logging.INFO)
