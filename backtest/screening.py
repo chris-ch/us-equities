@@ -3,6 +3,8 @@ import math
 import logging
 from datetime import datetime
 
+import constants
+
 def average(s):
     return sum(s) * 1.0 / len(s)
 

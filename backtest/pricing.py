@@ -29,6 +29,9 @@ class Pricing(object):
         self.__prices = dict()
         
     def get_dividends(self, date_start, date_end, code):
+        if not self.__dividends.has_key(code):
+            return 0.0
+            
         values = [self.__dividends[code][date]
             for date in self.__dividends[code].keys()
             if date >= date_start and date <= date_end]

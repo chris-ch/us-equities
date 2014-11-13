@@ -156,7 +156,7 @@ def main():
     universe = Universe(equities)
     screener = Screening(universe)
     
-    for date_start, date_end in month_range('200001', 48, 3):
+    for date_start, date_end in month_range('200801', 2, 3):
         logging.info('back testing over period %s through %s' % (date_start.strftime('%Y-%m-%d'), date_end.strftime('%Y-%m-%d')))
         universe.init_month(date_start.year, date_start.month, 10e6)
         logging.info('universe size: %d' % universe.size())
