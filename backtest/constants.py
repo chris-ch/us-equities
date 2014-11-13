@@ -9,7 +9,7 @@ UNADJUSTED_PRICES_DATA = os.sep.join((DATASOURCE_DIR, 'us-prices-unadjusted-1992
 SOURCE_US_EQUITIES = os.sep.join((DATASOURCE_DIR, 'us-equities.csv'))
 SOURCE_US_FUNDS = os.sep.join((DATASOURCE_DIR, 'us-funds.csv'))
 SOURCE_DIVIDENDS = os.sep.join((DATASOURCE_DIR, 'dividends.csv'))
-SOURCE_BENCHMARK = os.sep.join((DATASOURCE_DIR, 'sptr.csv'))
+SOURCE_BENCHMARK = os.sep.join((DATASOURCE_DIR, 'w5000.csv'))
 
 CACHE_PERFS = os.sep.join((CACHE_DIR, 'perf-data.db'))
 CACHE_VOLUMES = os.sep.join((CACHE_DIR, 'stats-volume.db'))

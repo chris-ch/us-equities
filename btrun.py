@@ -52,8 +52,8 @@ def apply_strategy(pricer, percents, amount, as_of_date):
             
         return portfolio, final_amount
     
-def create_portfolio(pricer, cash, securities, date_start):
-    logging.info('creating portfolio as of %s' % date_start.strftime('%Y-%m-%d'))
+def create_portfolio(pricer, amount, securities, as_of_date):
+    logging.info('creating portfolio as of %s' % as_of_date.strftime('%Y-%m-%d'))
     logging.info('positions: %s' % (securities))
     weightings = dict()
     for security in securities:
@@ -61,7 +61,7 @@ def create_portfolio(pricer, cash, securities, date_start):
         # TODO: adjust weighting according to individual beta
         weightings[security] = 1.0 / len(securities)
     
-    portfolio, residual_cash = apply_strategy(pricer, weightings, cash, date_start)
+    portfolio, residual_cash = apply_strategy(pricer, weightings, amount, as_of_date)
     return portfolio, residual_cash
    
 class Backtest(object):
@@ -69,22 +69,14 @@ class Backtest(object):
     def __init__(self):
         self.__pricer = Pricing() 
     
-    def run_period(self, date_start, date_end, portfolio, residual_cash, prev_portfolio=None):
-        logging.info('created portfolio %s' % (portfolio))
-        logging.info('remaining cash %.0f' % (residual_cash))
-        
-        if prev_portfolio is not None:
-            # computes turnover
-            (dropped_amount, added_amount, adjusted_amount) = turnover(date_start, portfolio, prev_portfolio)
-            logging.info('turnover %.0f, %.0f, %.0f' % (dropped_amount, added_amount, adjusted_amount))
-            
+    def run_period(self, date_start, date_end, portfolio, residual_cash):
         dividends = dict()
         for code in portfolio.keys():
             dividends[code] = self.__pricer.get_dividends(date_start, date_end, code) * float(portfolio[code])
         
         residual_cash += sum(dividends.values())
         
-        return portfolio, residual_cash
+        return residual_cash
 
     def turn_shares_into_amounts(self, portfolio, as_of_date, normalized=False):
         """
@@ -147,10 +139,13 @@ def main():
         
     universe = Universe(equities)
     screener = Screening(universe)
-    portfolio = dict()
     pricer = Pricing() 
+    bt = Backtest()
+    portfolios = dict()
+    prev_portfolio = dict()
+    cash = 1e6
+    amount_invested = cash # initial investment
     
-    positions = dict()
     for date_start, date_end in month_range('200801', 2, 3):
         logging.info('creating portfolio as of %s' % (date_start.strftime('%Y-%m-%d')))
         universe.init_month(date_start.year, date_start.month, 10e6)
@@ -158,27 +153,22 @@ def main():
         
         hist_data_range = date_start - timedelta(days=1)
         (buy_list, sell_list) = screener.compute_volatilities(hist_data_range.strftime('%Y%m'), count_months=18, count_securities=100)
-        cash = 1e6
-        value_prev = cash
-        logging.info('investing %.0f as of %s' % (cash, date_start.strftime('%Y-%m-%d')))
         
-        portfolio, residual_cash = create_portfolio(pricer, cash, buy_list, date_start)
-        positions[date_start] = (portfolio, residual_cash)
-        
-    logging.info('finished processing positions')
-    
-    bt = Backtest()
-    dates = sorted(positions.keys())
-    periods = zip(dates[:-1], map(lambda d: d - timedelta(days=1), dates[1:]))
-    for date, date_end in periods:
-        logging.info('back testing over period %s through %s' % (date.strftime('%Y-%m-%d'), date_end.strftime('%Y-%m-%d')))
-        weightings, available_cash = positions[date_start]
-        portfolio, cash = bt.run_period(date, date_end, weightings, available_cash)
-        value = bt.valuation(date_end, portfolio, cash)
-        logging.info('valuation as of %s: %.0f' % (date_end.strftime('%Y-%m-%d'), value))
-        logging.info('positions at start of period: %s' % (bt.turn_shares_into_amounts(portfolio, date_start)))
-        logging.info('positions at end of period: %s' % (bt.turn_shares_into_amounts(portfolio, date_end)))
-        logging.info('performance: %.2f%%' % ((value / value_prev - 1.0) * 100.0))
+        logging.info('investing %.0f as of %s' % (amount_invested, date_start.strftime('%Y-%m-%d')))
+        portfolio, residual_cash = create_portfolio(pricer, amount_invested, buy_list, date_start)
+        print bt.turnover(date_start, portfolio, prev_portfolio)
+        # records positions
+        portfolios[date_start] = (portfolio, residual_cash)
+            
+        logging.info('back testing over period %s through %s' % (date_start.strftime('%Y-%m-%d'), date_end.strftime('%Y-%m-%d')))
+        final_cash = bt.run_period(date_start, date_end, portfolio, residual_cash)
+        amount_final = bt.valuation(date_end, portfolio, final_cash)
+        logging.info('valuation as of %s: %.0f' % (date_end.strftime('%Y-%m-%d'), amount_final))
+        logging.debug('positions at start of period: %s' % (bt.turn_shares_into_amounts(portfolio, date_start)))
+        logging.debug('positions at end of period: %s' % (bt.turn_shares_into_amounts(portfolio, date_end)))
+        logging.info('performance: %.2f%%' % ((amount_final / amount_invested - 1.0) * 100.0))
+        amount_invested = amount_final
+        prev_portfolio = portfolio
         
         logging.info('benchmark performance over same period: %.2f%%' % (bt.get_benchmark_performance(date_start, date_end)  * 100.0))
     
