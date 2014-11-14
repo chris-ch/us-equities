@@ -21,20 +21,31 @@ def month_subtract(yyyymm, n):
     start_yyyymm = '%d%02d' % (start_yyyy, start_mm)
     return start_yyyymm
 
-def make_volatilities_statistics(universe, performances, count_months, start_yyyymm, end_yyyymm):
-    volatilities = dict()
-    total = universe.size()
-    for index, security_code in enumerate(universe.securities()):
-        security_performances = [performances[security_code][date]
+def compute_volatility(security_code, performances, count_months, start_yyyymm, end_yyyymm):
+    security_performances = [performances[security_code][date]
             for date in performances[security_code].keys()
             if date[:6] <= end_yyyymm
             and date[:6] >= start_yyyymm
         ]
-        if len(security_performances) <= 0.8 * (count_months * 20): continue # not enough data
-        volatility = stdev(security_performances)
+    if len(security_performances) <= 0.8 * (count_months * 20): continue # not enough data
+    
+    return stdev(security_performances)
+
+def make_volatilities_statistics(universe, performances, count_months, start_yyyymm, end_yyyymm):
+    volatilities = dict()
+    total = universe.size()
+    from multiprocessing import Pool
+    pool = Pool(processes=4) 
+    results = dict()
+    for index, security_code in enumerate(universe.securities()):
+        params = [security_code, performances, count_months, start_yyyymm, end_yyyymm]
+        results[security_code] = pool.apply_async(compute_volatility, params)
         #logging.debug('volatility for security %s (%d/%d) = %.2f%%' % (security_code, index + 1, total, volatility * 100.0))
-        volatilities[security_code] = volatility
-                
+        #volatilities[security_code] = compute_volatility(security_code, performances, count_months, start_yyyymm, end_yyyymm)
+    
+    for security_code in results.keys():
+        volatilities[security_code] = results[security_code].get(timeout=60) 
+    
     return volatilities
 
 class SimpleCache(object):

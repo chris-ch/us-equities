@@ -161,7 +161,7 @@ def main():
     cash = 1e6
     amount_invested = cash # initial investment
     
-    for date_start, date_end in month_range('200801', 2, 3):
+    for date_start, date_end in month_range('200601', 60, 1):
         logging.info('creating portfolio as of %s' % (date_start.strftime('%Y-%m-%d')))
         universe.init_month(date_start.year, date_start.month, 10e6)
         logging.info('universe size: %d' % universe.size())
@@ -170,7 +170,7 @@ def main():
         (buy_list, sell_list) = screener.compute_volatilities(hist_data_range.strftime('%Y%m'), count_months=18, count_securities=100)
         
         logging.info('investing %.0f as of %s' % (amount_invested, date_start.strftime('%Y-%m-%d')))
-        portfolio, residual_cash = create_portfolio(pricer, amount_invested, buy_list, date_start)
+        portfolio, residual_cash = create_portfolio(pricer, amount_invested, sell_list, date_start)
         logging.debug('additions %s' % bt.delta_additions(portfolio, prev_portfolio))
         logging.debug('deletions %s' % bt.delta_deletions(portfolio, prev_portfolio))
         logging.debug('adjustments %s' % bt.delta_adjustments(portfolio, prev_portfolio))
