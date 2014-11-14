@@ -37,7 +37,7 @@ def make_volatilities_statistics(universe, count_months, start_yyyymm, end_yyyym
     volatilities = dict()
     total = universe.size()
     from multiprocessing import Pool
-    pool = Pool(processes=4) 
+    pool = Pool(processes=6) 
     results = dict()
     for index, security_code in enumerate(universe.securities()):
         params = [security_code, count_months, start_yyyymm, end_yyyymm]
